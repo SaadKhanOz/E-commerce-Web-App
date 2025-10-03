@@ -33,5 +33,17 @@ services:
       timeout: 3s
       retries: 5
 
+  web:
+    build:
+      context: ../apps/web
+      dockerfile: Dockerfile
+    container_name: web
+    environment:
+      - VITE_AUTH_URL=http://localhost:3001/health
+    ports:
+      - "8080:80"
+    depends_on:
+      - auth
+
 volumes:
   mongo_data:
