@@ -1,0 +1,335 @@
+version: '3.8'
+
+services:
+  # MongoDB Databases
+  user-db:
+    image: mongo:7.0
+    container_name: user-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - user_data:/data/db
+    networks:
+      - ecommerce-network
+
+  product-db:
+    image: mongo:7.0
+    container_name: product-db
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - product_data:/data/db
+    networks:
+      - ecommerce-network
+
+  inventory-db:
+    image: mongo:7.0
+    container_name: inventory-db
+    restart: unless-stopped
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - inventory_data:/data/db
+    networks:
+      - ecommerce-network
+
+  order-db:
+    image: mongo:7.0
+    container_name: order-db
+    restart: unless-stopped
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - order_data:/data/db
+    networks:
+      - ecommerce-network
+
+  payment-db:
+    image: mongo:7.0
+    container_name: payment-db
+    restart: unless-stopped
+    ports:
+      - "27021:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - payment_data:/data/db
+    networks:
+      - ecommerce-network
+
+  notification-db:
+    image: mongo:7.0
+    container_name: notification-db
+    restart: unless-stopped
+    ports:
+      - "27022:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - notification_data:/data/db
+    networks:
+      - ecommerce-network
+
+  review-db:
+    image: mongo:7.0
+    container_name: review-db
+    restart: unless-stopped
+    ports:
+      - "27023:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - review_data:/data/db
+    networks:
+      - ecommerce-network
+
+  search-db:
+    image: mongo:7.0
+    container_name: search-db
+    restart: unless-stopped
+    ports:
+      - "27024:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - search_data:/data/db
+    networks:
+      - ecommerce-network
+
+  shipping-db:
+    image: mongo:7.0
+    container_name: shipping-db
+    restart: unless-stopped
+    ports:
+      - "27025:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - shipping_data:/data/db
+    networks:
+      - ecommerce-network
+
+  analytics-db:
+    image: mongo:7.0
+    container_name: analytics-db
+    restart: unless-stopped
+    ports:
+      - "27026:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    volumes:
+      - analytics_data:/data/db
+    networks:
+      - ecommerce-network
+
+  # Microservices
+  user-service:
+    build: ./services/user-service
+    container_name: user-service
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - MONGODB_URI=mongodb://user-db:27017/userdb
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      - user-db
+    networks:
+      - ecommerce-network
+
+  product-service:
+    build: ./services/product-service
+    container_name: product-service
+    restart: unless-stopped
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - MONGODB_URI=mongodb://product-db:27017/productdb
+    depends_on:
+      - product-db
+    networks:
+      - ecommerce-network
+
+  inventory-service:
+    build: ./services/inventory-service
+    container_name: inventory-service
+    restart: unless-stopped
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - MONGODB_URI=mongodb://inventory-db:27017/inventorydb
+    depends_on:
+      - inventory-db
+    networks:
+      - ecommerce-network
+
+  order-service:
+    build: ./services/order-service
+    container_name: order-service
+    restart: unless-stopped
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - MONGODB_URI=mongodb://order-db:27017/orderdb
+    depends_on:
+      - order-db
+    networks:
+      - ecommerce-network
+
+  payment-service:
+    build: ./services/payment-service
+    container_name: payment-service
+    restart: unless-stopped
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - MONGODB_URI=mongodb://payment-db:27017/paymentdb
+    depends_on:
+      - payment-db
+    networks:
+      - ecommerce-network
+
+  notification-service:
+    build: ./services/notification-service
+    container_name: notification-service
+    restart: unless-stopped
+    ports:
+      - "3006:3006"
+    environment:
+      - PORT=3006
+      - MONGODB_URI=mongodb://notification-db:27017/notificationdb
+    depends_on:
+      - notification-db
+    networks:
+      - ecommerce-network
+
+  review-service:
+    build: ./services/review-service
+    container_name: review-service
+    restart: unless-stopped
+    ports:
+      - "3007:3007"
+    environment:
+      - PORT=3007
+      - MONGODB_URI=mongodb://review-db:27017/reviewdb
+    depends_on:
+      - review-db
+    networks:
+      - ecommerce-network
+
+  search-service:
+    build: ./services/search-service
+    container_name: search-service
+    restart: unless-stopped
+    ports:
+      - "3008:3008"
+    environment:
+      - PORT=3008
+      - MONGODB_URI=mongodb://search-db:27017/searchdb
+    depends_on:
+      - search-db
+    networks:
+      - ecommerce-network
+
+  shipping-service:
+    build: ./services/shipping-service
+    container_name: shipping-service
+    restart: unless-stopped
+    ports:
+      - "3009:3009"
+    environment:
+      - PORT=3009
+      - MONGODB_URI=mongodb://shipping-db:27017/shippingdb
+    depends_on:
+      - shipping-db
+    networks:
+      - ecommerce-network
+
+  analytics-service:
+    build: ./services/analytics-service
+    container_name: analytics-service
+    restart: unless-stopped
+    ports:
+      - "3010:3010"
+    environment:
+      - PORT=3010
+      - MONGODB_URI=mongodb://analytics-db:27017/analyticsdb
+    depends_on:
+      - analytics-db
+    networks:
+      - ecommerce-network
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: api-gateway
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - PORT=3000
+      - JWT_SECRET=your-super-secret-jwt-key-change-in-production
+    depends_on:
+      - user-service
+      - product-service
+      - inventory-service
+      - order-service
+      - payment-service
+      - notification-service
+      - review-service
+      - search-service
+      - shipping-service
+      - analytics-service
+    networks:
+      - ecommerce-network
+
+  frontend:
+    build: ./frontend
+    container_name: frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - ecommerce-network
+
+volumes:
+  user_data:
+  product_data:
+  inventory_data:
+  order_data:
+  payment_data:
+  notification_data:
+  review_data:
+  search_data:
+  shipping_data:
+  analytics_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge
