@@ -17,6 +17,10 @@ app.use(express.json());
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://user-db:27017/userdb', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+}).then(() => {
+  console.log('Connected to MongoDB');
+}).catch((err) => {
+  console.error('MongoDB connection error:', err);
 });
 
 // User Schema
@@ -68,22 +72,29 @@ app.post('/register', [
   body('lastName').notEmpty().withMessage('Last name required')
 ], async (req, res) => {
   try {
+    console.log('Registration request received:', req.body);
+    
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
+      console.log('Validation errors:', errors.array());
       return res.status(400).json({ errors: errors.array() });
     }
 
     const { username, email, password, firstName, lastName, role = 'customer' } = req.body;
 
+    console.log('Checking for existing user...');
     // Check if user already exists
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
+      console.log('User already exists');
       return res.status(400).json({ message: 'User already exists with this email or username' });
     }
 
+    console.log('Hashing password...');
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
+    console.log('Creating user...');
     // Create user
     const user = new User({
       username,
@@ -95,6 +106,7 @@ app.post('/register', [
     });
 
     await user.save();
+    console.log('User saved successfully');
 
     // Generate JWT
     const token = jwt.sign(
@@ -103,6 +115,7 @@ app.post('/register', [
       { expiresIn: '24h' }
     );
 
+    console.log('Registration successful');
     res.status(201).json({
       message: 'User registered successfully',
       user: {
@@ -116,6 +129,7 @@ app.post('/register', [
       token
     });
   } catch (error) {
+    console.error('Registration error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
