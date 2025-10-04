@@ -140,7 +140,7 @@ const ErrorMessage = styled.div`
 
 const fetchProducts = async (params) => {
   const queryString = new URLSearchParams(params).toString();
-  const response = await fetch(`/api/products?${queryString}`);
+    const response = await fetch(`http://localhost:3002/products?${queryString}`);
   if (!response.ok) {
     throw new Error('Failed to fetch products');
   }
