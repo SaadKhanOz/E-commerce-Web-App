@@ -296,6 +296,75 @@ app.get('/orders/stats', async (req, res) => {
   }
 });
 
+// Minimal UI
+app.get('/', (req, res) => {
+  res.send(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Order Service UI</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; margin: 0; padding: 2rem; line-height: 1.5; }
+    .container { max-width: 900px; margin: 0 auto; }
+    .card { border: 1px solid #4443; border-radius: 12px; padding: 1rem; margin-bottom: 1rem; }
+    input, textarea, select { width: 100%; padding: .6rem; border: 1px solid #4443; border-radius: 8px; font-family: inherit; }
+    label { font-weight: 600; display: block; margin: .5rem 0 .3rem; }
+    button { padding: .6rem 1rem; border-radius: 8px; border: 1px solid #4443; cursor: pointer; }
+    pre { background: #00000008; padding: 1rem; border-radius: 8px; overflow: auto; max-height: 45vh; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Order Service</h1>
+    <div class="card">
+      <h2>Quick Health</h2>
+      <button id="btnHealth">GET /health</button>
+    </div>
+    <div class="card">
+      <h2>Create Order</h2>
+      <textarea id="createBody" rows="12">{ "customerId": "user-1", "items": [ { "productId": "p1", "productName": "Sample", "quantity": 2, "price": 10 } ], "shippingAddress": { "street": "1 Main", "city": "NYC", "state": "NY", "zipCode": "10001", "country": "US" }, "notes": "Leave at door" }</textarea>
+      <button id="btnCreate">POST /orders</button>
+    </div>
+    <div class="card">
+      <h2>Generic Request</h2>
+      <label>Method</label>
+      <select id="method"><option>GET</option><option>POST</option><option>PUT</option><option>DELETE</option></select>
+      <label>Path</label>
+      <input id="path" value="/orders" />
+      <label>JSON Body</label>
+      <textarea id="body" rows="8">{}</textarea>
+      <button id="send">Send</button>
+    </div>
+    <div class="card">
+      <h2>Response</h2>
+      <pre id="out"></pre>
+    </div>
+  </div>
+  <script>
+    const out = document.getElementById('out');
+    function show(x){ out.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 2); }
+    async function call(method, path, body){
+      const headers = { 'Content-Type': 'application/json' };
+      const opts = { method, headers };
+      if(method === 'POST' || method === 'PUT') opts.body = body || '{}';
+      const r = await fetch(path, opts);
+      const t = await r.text();
+      try{ show(JSON.parse(t)); }catch{ show(t); }
+    }
+    document.getElementById('btnHealth').onclick = () => call('GET', '/health');
+    document.getElementById('btnCreate').onclick = () => call('POST', '/orders', document.getElementById('createBody').value);
+    document.getElementById('send').onclick = () => call(
+      document.getElementById('method').value,
+      document.getElementById('path').value,
+      document.getElementById('body').value
+    );
+  </script>
+</body>
+</html>`);
+});
+
 app.listen(PORT, () => {
   console.log(`Order service running on port ${PORT}`);
 });

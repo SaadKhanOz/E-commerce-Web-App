@@ -158,6 +158,7 @@ const Header = () => {
           </SearchBox>
 
           <NavLinks>
+            <NavLink to="/dashboard">Dashboard</NavLink>
             <NavLink to="/products">Products</NavLink>
             
             <CartIcon to="/cart">

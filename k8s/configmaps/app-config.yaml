@@ -1,0 +1,64 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: ecommerce
+data:
+  # User Service Config
+  USER_SERVICE_PORT: "3001"
+  USER_MONGODB_URI: "mongodb://user-db:27017/userdb"
+  
+  # Product Service Config
+  PRODUCT_SERVICE_PORT: "3002"
+  PRODUCT_MONGODB_URI: "mongodb://product-db:27017/productdb"
+  
+  # Inventory Service Config
+  INVENTORY_SERVICE_PORT: "3003"
+  INVENTORY_MONGODB_URI: "mongodb://inventory-db:27017/inventorydb"
+  
+  # Order Service Config
+  ORDER_SERVICE_PORT: "3004"
+  ORDER_MONGODB_URI: "mongodb://order-db:27017/orderdb"
+  
+  # Payment Service Config
+  PAYMENT_SERVICE_PORT: "3005"
+  PAYMENT_MONGODB_URI: "mongodb://payment-db:27017/paymentdb"
+  
+  # Notification Service Config
+  NOTIFICATION_SERVICE_PORT: "3006"
+  NOTIFICATION_MONGODB_URI: "mongodb://notification-db:27017/notificationdb"
+  
+  # Review Service Config
+  REVIEW_SERVICE_PORT: "3007"
+  REVIEW_MONGODB_URI: "mongodb://review-db:27017/reviewdb"
+  
+  # Search Service Config
+  SEARCH_SERVICE_PORT: "3008"
+  SEARCH_MONGODB_URI: "mongodb://search-db:27017/searchdb"
+  
+  # Shipping Service Config
+  SHIPPING_SERVICE_PORT: "3009"
+  SHIPPING_MONGODB_URI: "mongodb://shipping-db:27017/shippingdb"
+  
+  # Analytics Service Config
+  ANALYTICS_SERVICE_PORT: "3010"
+  ANALYTICS_MONGODB_URI: "mongodb://analytics-db:27017/analyticsdb"
+  
+  # API Gateway Config
+  API_GATEWAY_PORT: "3000"
+  
+  # Service URLs for API Gateway (using Kubernetes service names)
+  USER_SERVICE_URL: "http://user-service:3001"
+  PRODUCT_SERVICE_URL: "http://product-service:3002"
+  INVENTORY_SERVICE_URL: "http://inventory-service:3003"
+  ORDER_SERVICE_URL: "http://order-service:3004"
+  PAYMENT_SERVICE_URL: "http://payment-service:3005"
+  NOTIFICATION_SERVICE_URL: "http://notification-service:3006"
+  REVIEW_SERVICE_URL: "http://review-service:3007"
+  SEARCH_SERVICE_URL: "http://search-service:3008"
+  SHIPPING_SERVICE_URL: "http://shipping-service:3009"
+  ANALYTICS_SERVICE_URL: "http://analytics-service:3010"
+  
+  # Frontend Config (will be set to Ingress URL in production)
+  REACT_APP_API_URL: "http://api-gateway-service:3000/api"
+

@@ -170,6 +170,103 @@ app.get('/api/health', async (req, res) => {
   });
 });
 
+// Simple UI Dashboard
+app.get('/', (req, res) => {
+  const serviceLinks = Object.entries(services).map(
+    ([name], idx) => `<li><a href="http://localhost:${3001 + idx}" target="_blank">${name}-service (port ${3001 + idx})</a></li>`
+  ).join('');
+  res.send(`<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E-Commerce API Gateway</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, 'Helvetica Neue', Arial, 'Noto Sans', 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol'; margin: 0; padding: 2rem; line-height: 1.5; }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { margin-top: 0; }
+    .grid { display: grid; grid-template-columns: 1fr; gap: 1rem; }
+    @media (min-width: 900px) { .grid { grid-template-columns: 2fr 1fr; } }
+    .card { border: 1px solid #4443; border-radius: 12px; padding: 1rem; }
+    button { padding: .6rem 1rem; border-radius: 8px; border: 1px solid #4443; cursor: pointer; }
+    input, select, textarea { width: 100%; box-sizing: border-box; padding: .6rem .7rem; border-radius: 8px; border: 1px solid #4443; font-family: inherit; }
+    label { font-weight: 600; display: block; margin: .6rem 0 .3rem; }
+    pre { background: #00000008; border-radius: 8px; padding: 1rem; overflow: auto; max-height: 45vh; }
+    ul { margin: .4rem 0 .8rem; padding-left: 1.2rem; }
+    .muted { opacity: .8; }
+    .row { display: flex; gap: .6rem; align-items: center; }
+  </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>API Gateway UI</h1>
+      <p class="muted">Use this page to query the gateway and jump to each service UI.</p>
+      <div class="grid">
+        <div class="card">
+          <h2>Try Gateway Request</h2>
+          <div class="row">
+            <label for="method">Method</label>
+            <select id="method">
+              <option>GET</option>
+              <option>POST</option>
+              <option>PUT</option>
+              <option>DELETE</option>
+            </select>
+          </div>
+          <label for="path">Path (relative to gateway)</label>
+          <input id="path" value="/api/health" />
+          <label for="token">Bearer Token (optional)</label>
+          <input id="token" placeholder="ey..." />
+          <label for="body">JSON Body (for POST/PUT)</label>
+          <textarea id="body" rows="6">{}</textarea>
+          <div class="row" style="margin-top:.7rem;">
+            <button id="send">Send</button>
+            <button id="health">Check /api/health</button>
+          </div>
+          <h3>Response</h3>
+          <pre id="output"></pre>
+        </div>
+        <div class="card">
+          <h2>Service UIs</h2>
+          <ul>${serviceLinks}</ul>
+          <p class="muted">Each service exposes a minimal UI at its root, e.g. http://localhost:3001/</p>
+        </div>
+      </div>
+    </div>
+    <script>
+      const out = document.getElementById('output');
+      const send = document.getElementById('send');
+      const methodEl = document.getElementById('method');
+      const pathEl = document.getElementById('path');
+      const tokenEl = document.getElementById('token');
+      const bodyEl = document.getElementById('body');
+      const healthBtn = document.getElementById('health');
+      
+      async function doFetch(m, p, t, b) {
+        try {
+          const headers = { 'Content-Type': 'application/json' };
+          if (t) headers['Authorization'] = 'Bearer ' + t;
+          const opts = { method: m, headers };
+          if (m === 'POST' || m === 'PUT') opts.body = b || '{}';
+          const resp = await fetch(p, opts);
+          const text = await resp.text();
+          try {
+            out.textContent = JSON.stringify(JSON.parse(text), null, 2);
+          } catch {
+            out.textContent = text;
+          }
+        } catch (e) {
+          out.textContent = 'Error: ' + e.message;
+        }
+      }
+      send.addEventListener('click', () => doFetch(methodEl.value, pathEl.value, tokenEl.value.trim(), bodyEl.value));
+      healthBtn.addEventListener('click', () => doFetch('GET', '/api/health', tokenEl.value.trim()));
+    </script>
+  </body>
+</html>`);
+});
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Gateway Error:', err);
