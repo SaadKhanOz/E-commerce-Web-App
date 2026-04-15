@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import styled from 'styled-components';
+import { Link } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import { useAuth } from '../context/AuthContext';
 import { api } from '../services/api';
-import { toast } from 'react-toastify';
 
 const DashboardContainer = styled.div`
   padding: 2rem;
@@ -69,7 +70,7 @@ const SearchButton = styled.button`
 
 const ServiceGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: 1.5rem;
   margin-bottom: 2rem;
 `;
@@ -112,6 +113,33 @@ const ServiceDescription = styled.p`
   font-size: 0.9rem;
 `;
 
+const ServiceMeta = styled.div`
+  margin-top: 0.75rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const Badge = styled.span`
+  border-radius: 999px;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  color: #245bcb;
+  background: #e8f0ff;
+`;
+
+const MiniButton = styled.button`
+  border: none;
+  background: #f2f6ff;
+  color: #245bcb;
+  border-radius: 8px;
+  padding: 0.4rem 0.7rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+`;
+
 const ContentSection = styled.div`
   background: white;
   border-radius: 12px;
@@ -144,6 +172,40 @@ const ProductCard = styled.div`
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
     transform: translateY(-2px);
   }
+`;
+
+const CardActions = styled.div`
+  margin-top: 0.8rem;
+  display: flex;
+  gap: 0.6rem;
+`;
+
+const ActionButton = styled.button`
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 0.85rem;
+  cursor: pointer;
+  font-weight: 600;
+  color: white;
+  background: ${props => (props.secondary ? '#5c6f8f' : '#007bff')};
+`;
+
+const Form = styled.form`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0 1.5rem;
+`;
+
+const Input = styled.input`
+  padding: 0.75rem;
+  border: 1px solid #d6dce7;
+  border-radius: 8px;
+`;
+
+const InfoText = styled.p`
+  margin: 0 0 1rem 0;
+  color: #60708d;
 `;
 
 const ProductName = styled.h4`
@@ -254,18 +316,20 @@ const LoadingSpinner = styled.div`
   color: #666;
 `;
 
+const EmptyState = styled.div`
+  text-align: center;
+  padding: 2rem;
+  color: #666;
+  border: 1px dashed #ccd5e2;
+  border-radius: 10px;
+`;
+
 const ErrorMessage = styled.div`
   background: #f8d7da;
   color: #721c24;
   padding: 1rem;
   border-radius: 8px;
   margin: 1rem 0;
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: 3rem;
-  color: #666;
 `;
 
 const StatsGrid = styled.div`
@@ -303,8 +367,17 @@ const Dashboard = () => {
   const [inventory, setInventory] = useState([]);
   const [orders, setOrders] = useState([]);
   const [searchResults, setSearchResults] = useState(null);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [creatingProduct, setCreatingProduct] = useState(false);
+  const [newProduct, setNewProduct] = useState({
+    name: '',
+    description: '',
+    price: '',
+    category: '',
+    brand: ''
+  });
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalInventory: 0,
@@ -312,13 +385,21 @@ const Dashboard = () => {
     lowStockItems: 0
   });
 
-  const services = [
-    { id: 'products', name: 'Products', icon: '📦', desc: 'View all products' },
-    { id: 'inventory', name: 'Inventory', icon: '📊', desc: 'Check stock levels' },
-    { id: 'orders', name: 'Orders', icon: '🛒', desc: 'View order history' },
-    { id: 'search', name: 'Search', icon: '🔍', desc: 'Search products & orders' },
-    { id: 'analytics', name: 'Analytics', icon: '📈', desc: 'View analytics' }
-  ];
+  const services = useMemo(
+    () => [
+      { id: 'products', name: 'Products', icon: '📦', desc: 'View and create products', kind: 'dashboard', port: 3002 },
+      { id: 'inventory', name: 'Inventory', icon: '📊', desc: 'Stock and low-stock monitoring', kind: 'dashboard', port: 3003 },
+      { id: 'orders', name: 'Orders', icon: '🛒', desc: 'Customer order history', kind: 'dashboard', port: 3004 },
+      { id: 'search', name: 'Search', icon: '🔍', desc: 'Search products and orders', kind: 'dashboard', port: 3008 },
+      { id: 'analytics', name: 'Analytics', icon: '📈', desc: 'Business metrics dashboard', kind: 'dashboard', port: 3010 },
+      { id: 'users', name: 'Users', icon: '👤', desc: 'User auth/profile service UI', kind: 'external', port: 3001 },
+      { id: 'payment', name: 'Payments', icon: '💳', desc: 'Payment transactions service UI', kind: 'external', port: 3005 },
+      { id: 'notifications', name: 'Notifications', icon: '🔔', desc: 'Notification service UI', kind: 'external', port: 3006 },
+      { id: 'reviews', name: 'Reviews', icon: '⭐', desc: 'Review service UI', kind: 'external', port: 3007 },
+      { id: 'shipping', name: 'Shipping', icon: '🚚', desc: 'Shipping service UI', kind: 'external', port: 3009 }
+    ],
+    []
+  );
 
   useEffect(() => {
     loadData();
@@ -358,6 +439,7 @@ const Dashboard = () => {
           
         case 'analytics':
           const analyticsData = await api.analytics.dashboard('7d');
+          setAnalytics(analyticsData);
           setStats({
             totalProducts: analyticsData.totalProducts || 0,
             totalOrders: analyticsData.totalOrders || 0,
@@ -406,6 +488,42 @@ const Dashboard = () => {
     }
   };
 
+  const handleCreateProduct = async (event) => {
+    event.preventDefault();
+    if (!newProduct.name || !newProduct.price || !newProduct.category || !newProduct.brand) {
+      toast.warning('Fill all required product fields.');
+      return;
+    }
+
+    setCreatingProduct(true);
+    try {
+      const payload = {
+        ...newProduct,
+        price: Number(newProduct.price),
+        countInStock: 100
+      };
+
+      const created = await api.products.create(payload);
+      if (created && created._id) {
+        toast.success('Product created successfully');
+        setNewProduct({
+          name: '',
+          description: '',
+          price: '',
+          category: '',
+          brand: ''
+        });
+        await loadData();
+      } else {
+        toast.error(created?.message || 'Unable to create product');
+      }
+    } catch (createError) {
+      toast.error(createError.message || 'Unable to create product');
+    } finally {
+      setCreatingProduct(false);
+    }
+  };
+
   const renderContent = () => {
     if (loading && !searchResults) {
       return <LoadingSpinner>Loading...</LoadingSpinner>;
@@ -420,6 +538,40 @@ const Dashboard = () => {
         return (
           <ContentSection>
             <SectionTitle>Products ({products.length})</SectionTitle>
+            <InfoText>
+              Manage product catalog from dashboard, or open detailed pages from `Products`.
+            </InfoText>
+            <Form onSubmit={handleCreateProduct}>
+              <Input
+                placeholder="Product name *"
+                value={newProduct.name}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, name: e.target.value }))}
+              />
+              <Input
+                placeholder="Brand *"
+                value={newProduct.brand}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, brand: e.target.value }))}
+              />
+              <Input
+                placeholder="Category *"
+                value={newProduct.category}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, category: e.target.value }))}
+              />
+              <Input
+                type="number"
+                placeholder="Price *"
+                value={newProduct.price}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, price: e.target.value }))}
+              />
+              <Input
+                placeholder="Description"
+                value={newProduct.description}
+                onChange={(e) => setNewProduct((prev) => ({ ...prev, description: e.target.value }))}
+              />
+              <ActionButton disabled={creatingProduct}>
+                {creatingProduct ? 'Creating...' : 'Add New Product'}
+              </ActionButton>
+            </Form>
             {products.length === 0 ? (
               <EmptyState>No products found. Please seed the database first.</EmptyState>
             ) : (
@@ -432,6 +584,10 @@ const Dashboard = () => {
                     <div style={{ marginTop: '0.5rem' }}>
                       <InventoryBadge stock="in">In Stock</InventoryBadge>
                     </div>
+                    <CardActions>
+                      <ActionButton as={Link} to={`/products/${product._id}`}>View</ActionButton>
+                      <ActionButton as={Link} to="/products" secondary>Open Products</ActionButton>
+                    </CardActions>
                   </ProductCard>
                 ))}
               </ProductsGrid>
@@ -488,7 +644,12 @@ const Dashboard = () => {
           <ContentSection>
             <SectionTitle>Orders ({orders.length})</SectionTitle>
             {!user ? (
-              <EmptyState>Please login to view your orders</EmptyState>
+              <EmptyState>
+                Please login to view orders service data.
+                <div style={{ marginTop: '0.8rem' }}>
+                  <ActionButton as={Link} to="/login">Login</ActionButton>
+                </div>
+              </EmptyState>
             ) : orders.length === 0 ? (
               <EmptyState>No orders found</EmptyState>
             ) : (
@@ -554,6 +715,11 @@ const Dashboard = () => {
         return (
           <ContentSection>
             <SectionTitle>Analytics Dashboard</SectionTitle>
+            {!user && (
+              <InfoText>
+                Analytics endpoint is protected by gateway token. Login first if you see access errors.
+              </InfoText>
+            )}
             <StatsGrid>
               <StatCard>
                 <StatValue>{stats.totalProducts}</StatValue>
@@ -572,6 +738,23 @@ const Dashboard = () => {
                 <StatLabel>Low Stock Items</StatLabel>
               </StatCard>
             </StatsGrid>
+            {analytics?.topProducts?.length > 0 ? (
+              <>
+                <h3>Top Product IDs</h3>
+                <InventoryTable>
+                  <tbody>
+                    {analytics.topProducts.map((item) => (
+                      <TableRow key={item._id}>
+                        <TableCell>{item._id || 'Unknown Product'}</TableCell>
+                        <TableCell align="center">{item.sales}</TableCell>
+                      </TableRow>
+                    ))}
+                  </tbody>
+                </InventoryTable>
+              </>
+            ) : (
+              <InfoText>No product analytics yet. Track events to see analytics.</InfoText>
+            )}
           </ContentSection>
         );
 
@@ -586,6 +769,21 @@ const Dashboard = () => {
         <Title>E-Commerce Dashboard</Title>
         {user && <div style={{ color: '#666' }}>Welcome, {user.firstName}!</div>}
       </DashboardHeader>
+
+      <ContentSection>
+        <SectionTitle>Main Service Navigation</SectionTitle>
+        <InfoText>
+          Open frontend pages and each microservice UI directly from here.
+        </InfoText>
+        <CardActions>
+          <ActionButton as={Link} to="/products">Products Page</ActionButton>
+          <ActionButton as={Link} to="/orders" secondary>Orders Page</ActionButton>
+          <ActionButton as={Link} to="/profile" secondary>Profile Page</ActionButton>
+          <ActionButton as="a" href="http://localhost:3000" target="_blank" rel="noreferrer">
+            API Gateway
+          </ActionButton>
+        </CardActions>
+      </ContentSection>
 
       <StatsGrid>
         <StatCard>
@@ -638,13 +836,30 @@ const Dashboard = () => {
             key={service.id}
             active={activeService === service.id}
             onClick={() => {
-              setActiveService(service.id);
-              setSearchResults(null);
+              if (service.kind === 'dashboard') {
+                setActiveService(service.id);
+                setSearchResults(null);
+              }
             }}
           >
             <ServiceIcon>{service.icon}</ServiceIcon>
             <ServiceTitle>{service.name}</ServiceTitle>
             <ServiceDescription>{service.desc}</ServiceDescription>
+            <ServiceMeta>
+              <Badge>Port {service.port}</Badge>
+              {service.kind === 'external' ? (
+                <MiniButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(`http://localhost:${service.port}`, '_blank', 'noreferrer');
+                  }}
+                >
+                  Open Service
+                </MiniButton>
+              ) : (
+                <MiniButton>Open Panel</MiniButton>
+              )}
+            </ServiceMeta>
           </ServiceCard>
         ))}
       </ServiceGrid>

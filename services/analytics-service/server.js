@@ -138,7 +138,7 @@ app.get('/dashboard', async (req, res) => {
       timestamp: { $gte: startDate }
     }).then(visitors => visitors.length);
 
-    const conversionRate = totalVisitors > 0 ? (totalOrders / uniqueVisitors) * 100 : 0;
+    const conversionRate = uniqueVisitors > 0 ? (totalOrders / uniqueVisitors) * 100 : 0;
     const averageOrderValue = totalOrders > 0 ? (totalRevenue[0]?.total || 0) / totalOrders : 0;
 
     // Get top products

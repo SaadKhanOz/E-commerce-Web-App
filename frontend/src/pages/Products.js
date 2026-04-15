@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import styled from 'styled-components';
 import { useQuery } from 'react-query';
+import { api } from '../services/api';
 
 const ProductsContainer = styled.div`
   padding: 2rem 0;
@@ -139,12 +140,7 @@ const ErrorMessage = styled.div`
 `;
 
 const fetchProducts = async (params) => {
-  const queryString = new URLSearchParams(params).toString();
-    const response = await fetch(`http://localhost:3002/products?${queryString}`);
-  if (!response.ok) {
-    throw new Error('Failed to fetch products');
-  }
-  return response.json();
+  return api.products.getAll(params);
 };
 
 const Products = () => {
@@ -296,9 +292,11 @@ const Products = () => {
                     <ProductRating>
                       ⭐ {product.rating || 0} ({product.reviewCount || 0} reviews)
                     </ProductRating>
-                    <AddToCartBtn>
-                      Add to Cart
-                    </AddToCartBtn>
+                    <Link to={`/products/${product._id}`}>
+                      <AddToCartBtn as="span">
+                        View Product
+                      </AddToCartBtn>
+                    </Link>
                   </ProductInfo>
                 </ProductCard>
               ))}
